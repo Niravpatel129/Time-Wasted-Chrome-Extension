@@ -21,6 +21,24 @@ const Popup = () => {
 
   const percentage = Math.min((timeWasted / MAX_TIME) * 100, 100);
 
+  const formatTime = (seconds) => {
+    const days = Math.floor(seconds / (24 * 3600));
+    seconds %= 24 * 3600;
+    const hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+    const minutes = Math.floor(seconds / 60);
+    seconds = Math.floor(seconds % 60);
+
+    return [
+      days > 0 ? `${days}D` : '',
+      hours > 0 ? `${hours}H` : '',
+      minutes > 0 ? `${minutes}M` : '',
+      seconds > 0 ? `${seconds}S` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  };
+
   return (
     <div
       className='p-8 text-center bg-white shadow-lg rounded-lg'
@@ -37,7 +55,7 @@ const Popup = () => {
       <div
         className='text-2xl mb-6 text-gray-600'
         style={{ color: '#86868B' }}
-      >{`Time wasted: ${timeWasted.toFixed(2)} seconds`}</div>
+      >{`Time wasted: ${formatTime(timeWasted)}`}</div>
       <div
         className='w-full bg-gray-300 rounded-full h-12 overflow-hidden'
         style={{ backgroundColor: '#E5E5EA' }}
