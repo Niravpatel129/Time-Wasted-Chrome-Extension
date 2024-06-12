@@ -6,11 +6,15 @@ const Popup = () => {
   const [timeWasted, setTimeWasted] = useState(0);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const updateWastedTime = () => {
       chrome.storage.local.get(['timeWasted'], (result) => {
         setTimeWasted(result.timeWasted || 0);
       });
-    }, 1000);
+    };
+
+    updateWastedTime(); // Update immediately when the popup is opened
+
+    const interval = setInterval(updateWastedTime, 1000);
 
     return () => clearInterval(interval);
   }, []);

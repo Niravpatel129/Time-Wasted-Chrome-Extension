@@ -30,9 +30,10 @@ function updateTimeWasted() {
     const timeSpent = (endTime - startTime) / 1000; // time in seconds
     chrome.storage.local.get(['timeWasted'], (result) => {
       const newTime = (result.timeWasted || 0) + timeSpent;
-      chrome.storage.local.set({ timeWasted: newTime });
+      chrome.storage.local.set({ timeWasted: newTime }, () => {
+        startTime = Date.now(); // Reset the start time after updating storage
+      });
     });
-    startTime = Date.now(); // Reset the start time
   }
 }
 
@@ -40,14 +41,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.active) {
     const isTimeWasting = checkTimeWasting(tab.url);
     updateIcon(isTimeWasting);
-    updateTimeWasted();
     if (isTimeWasting) {
       activeTabId = tabId;
       startTime = Date.now();
+      updateTimeWasted(); // Update immediately
       if (!intervalId) {
         intervalId = setInterval(updateTimeWasted, 1000);
       }
     } else {
+      updateTimeWasted();
       activeTabId = null;
       clearInterval(intervalId);
       intervalId = null;
@@ -59,14 +61,15 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.tabs.get(activeInfo.tabId, (tab) => {
     const isTimeWasting = checkTimeWasting(tab.url);
     updateIcon(isTimeWasting);
-    updateTimeWasted();
     if (isTimeWasting) {
       activeTabId = activeInfo.tabId;
       startTime = Date.now();
+      updateTimeWasted(); // Update immediately
       if (!intervalId) {
         intervalId = setInterval(updateTimeWasted, 1000);
       }
     } else {
+      updateTimeWasted();
       activeTabId = null;
       clearInterval(intervalId);
       intervalId = null;
