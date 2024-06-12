@@ -28,11 +28,17 @@ function updateTimeWasted() {
   if (startTime && activeTabId !== null) {
     const endTime = Date.now();
     const timeSpent = (endTime - startTime) / 1000; // time in seconds
-    chrome.storage.local.get(['timeWasted'], (result) => {
-      const newTime = (result.timeWasted || 0) + timeSpent;
-      chrome.storage.local.set({ timeWasted: newTime }, () => {
-        startTime = Date.now(); // Reset the start time after updating storage
-      });
+    chrome.tabs.get(activeTabId, (tab) => {
+      const site = TIME_WASTING_SITES.find((site) => tab.url.includes(site));
+      if (site) {
+        chrome.storage.local.get(['timeWasted'], (result) => {
+          const timeWasted = result.timeWasted || {};
+          const newTime = (timeWasted[site] || 0) + timeSpent;
+          chrome.storage.local.set({ timeWasted: { ...timeWasted, [site]: newTime } }, () => {
+            startTime = Date.now(); // Reset the start time after updating storage
+          });
+        });
+      }
     });
   }
 }

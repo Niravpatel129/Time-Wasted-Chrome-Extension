@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 
-const MAX_TIME = 3600; // 1 hour in seconds
-
 const Popup = () => {
-  const [timeWasted, setTimeWasted] = useState(0);
+  const [timeWasted, setTimeWasted] = useState({});
 
   useEffect(() => {
     const updateWastedTime = () => {
       chrome.storage.local.get(['timeWasted'], (result) => {
-        setTimeWasted(result.timeWasted || 0);
+        setTimeWasted(result.timeWasted || {});
       });
     };
 
@@ -19,7 +17,7 @@ const Popup = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const percentage = Math.min((timeWasted / MAX_TIME) * 100, 100);
+  const totalTime = Object.values(timeWasted).reduce((sum, time) => sum + time, 0);
 
   const formatTime = (seconds) => {
     const days = Math.floor(seconds / (24 * 3600));
@@ -55,22 +53,30 @@ const Popup = () => {
       <div
         className='text-2xl mb-6 text-gray-600'
         style={{ color: '#86868B' }}
-      >{`Time wasted: ${formatTime(timeWasted)}`}</div>
+      >{`Total time wasted: ${formatTime(totalTime)}`}</div>
       <div
-        className='w-full bg-gray-300 rounded-full h-12 overflow-hidden'
+        className='w-full bg-gray-300 rounded-full h-12 overflow-hidden flex'
         style={{ backgroundColor: '#E5E5EA' }}
       >
-        <div
-          className='h-full text-white text-center flex items-center justify-center'
-          style={{
-            width: `${percentage}%`,
-            backgroundColor: '#34C759',
-            color: '#FFFFFF',
-            transition: 'width 0.5s ease-in-out',
-          }}
-        >
-          {`${percentage.toFixed(2)}%`}
-        </div>
+        {Object.entries(timeWasted).map(([site, time]) => {
+          const percentage = (time / totalTime) * 100;
+          const color =
+            site === 'youtube.com' ? '#FF0000' : site === 'facebook.com' ? '#1877F2' : '#FF4500';
+          return (
+            <div
+              key={site}
+              className='h-full text-white text-center flex items-center justify-center'
+              style={{
+                width: `${percentage}%`,
+                backgroundColor: color,
+                color: '#FFFFFF',
+                transition: 'width 0.5s ease-in-out',
+              }}
+            >
+              {`${site.split('.')[0]}: ${percentage.toFixed(2)}%`}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
